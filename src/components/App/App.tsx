@@ -2,7 +2,7 @@
 import { useState } from "react";
 import SearchBar from "../SearchBar/SearchBar";
 import MovieGrid from "../MovieGrid/MovieGrid";
-import { fetchMovies } from "../../services/movieService";
+import { useMovies } from "../../services/movieService";
 import type { Movie } from "../../types/movie";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
@@ -31,7 +31,7 @@ export default function App() {
     try {
       setIsLoading(true);
       setIsError(false);
-      const data = await fetchMovies(query);
+      const data = await useMovies(query);
       if (data.length > 0) {
         setMovies(data);
       } else {
