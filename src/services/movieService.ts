@@ -1,23 +1,27 @@
 //! 🔹 Imports
 import axios from "axios";
 import type { Movie } from "../types/movie";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 //! 🔹 SecretKey
 const myKey = import.meta.env.VITE_API_KEY;
 
 //! 🔹 Interface
-interface MovieHttpProps {
+type MovieHttpProps = {
   results: Movie[];
-}
+  total_pages: number;
+};
 
 //! 🔹 Default Axios URL
 axios.defaults.baseURL = "https://api.themoviedb.org/3/";
 
-//! 🔹 fetchMovies
-const fetchMovies = async (query: string): Promise<Movie[]> => {
+//! 🔹 Response
+const fetchMovies = async (
+  query: string,
+  page: number
+): Promise<MovieHttpProps> => {
   const options = {
-    params: { query: `${query}`, include_adult: false },
+    params: { query, include_adult: false, page },
     method: "GET",
     headers: {
       accept: "application/json",
@@ -27,17 +31,20 @@ const fetchMovies = async (query: string): Promise<Movie[]> => {
 
   try {
     const response = await axios.get<MovieHttpProps>("search/movie", options);
-    return response.data.results;
+
+    return response.data;
   } catch (error) {
     console.error("Error fetching movies");
     throw error;
   }
 };
 
-export const useMovies = (query: string) => {
+//! 🔹 Query Hook
+export const useMovies = (query: string, currentPage: number) => {
   return useQuery({
-    queryKey: ["movies", query], // уникальный ключ (важно для кеша)
-    queryFn: () => fetchMovies(query), // queryFn всегда функция без аргументов
-    enabled: !!query, // запускать запрос только если есть query
+    queryKey: ["movies", query, currentPage],
+    queryFn: () => fetchMovies(query, currentPage),
+    enabled: query !== "",
+    placeholderData: keepPreviousData,
   });
 };
