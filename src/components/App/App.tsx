@@ -1,5 +1,5 @@
 //* 🔹 Imports
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import css from "./App.module.css";
 import SearchBar from "../SearchBar/SearchBar";
 import MovieGrid from "../MovieGrid/MovieGrid";
@@ -22,14 +22,24 @@ export default function App() {
   //! 🔹 Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-
   const closeModal = () => setIsModalOpen(false);
   const openModal = (movie: Movie) => {
     setSelectedMovie(movie);
     setIsModalOpen(true);
   };
 
-  const { data, isLoading, isError } = useMovies(query, currentPage);
+  const { data, isLoading, isError, isSuccess } = useMovies(query, currentPage);
+
+  useEffect(() => {
+    if (
+      isSuccess &&
+      data &&
+      Array.isArray(data.results) &&
+      data.results.length === 0
+    ) {
+      toast("No movies found for your request.");
+    }
+  }, [isSuccess, data]);
 
   const handleSearchSubmit = (q: string) => {
     if (!q.trim()) {
@@ -62,11 +72,15 @@ export default function App() {
       {isLoading && <Loader />}
       {isError && <ErrorMessage />}
 
-      {data?.results.length > 0 && (
+      {data && Array.isArray(data.results) && data.results.length > 0 && (
         <MovieGrid movies={data.results} onSelect={openModal} />
       )}
 
-      {data && data.results.length === 0 && !isLoading && !isError}
+      {data &&
+        Array.isArray(data.results) &&
+        data.results.length === 0 &&
+        !isLoading &&
+        !isError}
 
       {isModalOpen && selectedMovie && (
         <MovieModal onClose={closeModal} movie={selectedMovie} />
